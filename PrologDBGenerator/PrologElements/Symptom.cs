@@ -11,6 +11,8 @@ namespace PrologDBGenerator.PrologElements
     class Symptom
     {
         public static string SymptomName = "symptomy";
+        public static string PrologDeclatarion = $":- dynamic {SymptomName}/13.";
+        public static string PrologComment = $"%{SymptomName}(id, katar,kaszel,slabosc,bol gardla, goraczka, dreszcze, bol glowy, bol miesni, drgawki, bol w klatece, trudnosc w oddychaniu, krwioplucie)";
 
         public static List<SymptomEnum> SymList = new List<SymptomEnum>()
         {
@@ -67,23 +69,33 @@ namespace PrologDBGenerator.PrologElements
         };
 
         public int Id { get; set; }
+
         Dictionary<SymptomEnum,int> SymptomsDegree;
         
-        public Symptom(int id, SymptomDiagnosisMatrix sdm, Diagnosis d)
+        public Symptom(int id, List<int> degrees)
         {
             Id = id;
             SymptomsDegree = new Dictionary<SymptomEnum, int>();
-            GenerateSymptoms(sdm, d);
-        }
-
-        void GenerateSymptoms(SymptomDiagnosisMatrix sdm, Diagnosis d)
-        {
-            
+            for (int i = 0; i < SymList.Count; i++)
+            {
+                SymptomsDegree[SymList[i]] = degrees[i];
+            }
         }
 
         public string GetPrologFact()
         {
-            throw new NotImplementedException();
+            string result = PrologComment + Environment.NewLine + SymptomName + $"({Id},";
+
+            for (int i = 0; i < SymList.Count; i++)
+            {
+                var scale = scaleDict[SymList[i]];
+                result += $"{scale[SymptomsDegree[SymList[i]]]}";
+                if (i != SymList.Count - 1)
+                    result += ",";
+            }
+
+            result += ").";
+            return result;
         }
     }
 }

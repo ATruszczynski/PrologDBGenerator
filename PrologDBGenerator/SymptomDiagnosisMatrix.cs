@@ -15,5 +15,10 @@ namespace PrologDBGenerator
         {
             matrix = new Dictionary<DiagnosisEnum, Dictionary<SymptomEnum, Value>>();
         }
+
+        public Value this[DiagnosisEnum d, SymptomEnum s]
+        {
+            get { return matrix[d][s]; }
+        }
     }
 }

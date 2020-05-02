@@ -43,6 +43,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="DiagnosisOverlapMatrix.cs" />
     <Compile Include="PrologElements\Diagnosis.cs" />
     <Compile Include="PrologElements\DiagnosisEnum.cs" />
     <Compile Include="Parser.cs" />

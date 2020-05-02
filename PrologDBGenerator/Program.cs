@@ -10,8 +10,9 @@ namespace PrologDBGenerator
     {
         static void Main(string[] args)
         {
-            var mat = Parser.GetMatrix(@"C:\Users\aleks\Desktop\ilness.csv");
-            PrologFileGenerator.GeneratePrologFile(mat, 10, seed: 1001);
+            var mat = Parser.GetSDMatrix(@"C:\Users\aleks\Desktop\ilness.csv");
+            var mat2 = Parser.GetDOMatrix(@"C:\Users\aleks\Desktop\diagnoses.csv");
+            PrologFileGenerator.GeneratePrologFile(mat, mat2, 50, seed: 1001);
         }
     }
 }

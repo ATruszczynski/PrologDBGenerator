@@ -13,6 +13,7 @@ namespace PrologDBGenerator
 {
     class PrologFileGenerator
     {
+        static Value SeverityOfMainDiagnosis = new Value(new List<double>() { 0, 0, 30 });
         //static Dictionary<int, string> painScale = new Dictionary<int, string>()
         //{
         //    { 0, "brak" },
@@ -86,18 +87,28 @@ namespace PrologDBGenerator
         //    Zapalenie_pluc
         //};
 
-        public static void GeneratePrologFile(SymptomDiagnosisMatrix mmatrix, int amount, string path = "res.pl", int? seed = null)
+        static Random random;
+
+        public static void GeneratePrologFile(SymptomDiagnosisMatrix sdMatrix, DiagnosisOverlapMatrix doMatrix, int amount, string path = "res.pl", int? seed = null)
         {
-            Random random = new Random();
+            random = new Random();
             if (seed != null)
              random = new Random(seed.Value);
-            var matrix = mmatrix.matrix;
+            var matrix = sdMatrix.matrix;
 
-            string prologContent = "%diagnoza(katar,kaszel,slabosc,bol_gardla,goraczka,dreszcze,bol_glowy,bol_miesni,drgawki,bol_w_klatce,trudnosc_w_oddychaniu,krwioplucie,alergia,astma,przeziebienie,angina,grypa,zapalenie_oskrzeli,zapalenie_pluc)" + Environment.NewLine +
-                ":- diagnoza/19";
+            string prologContent = $"{Diagnosis.PrologComment}{Environment.NewLine}{Diagnosis.PrologDeclatarion}{Environment.NewLine}{Symptom.PrologComment}{Environment.NewLine}{Symptom.PrologDeclatarion}{Environment.NewLine}";
 
             for (int i = 0; i < amount; i++)
             {
+                DiagnosisEnum mainDiag = Diagnosis.DiagnosisList[random.Next(Diagnosis.DiagnosisList.Count)];
+                var diagnosis = GetDiagnosis(i, mainDiag, doMatrix);
+
+                var symptoms = GetSymptoms(i, sdMatrix, diagnosis);
+
+                prologContent += diagnosis.GetPrologFact() + $"%{mainDiag.ToString()}" + Environment.NewLine + symptoms.GetPrologFact() + Environment.NewLine;
+
+                prologContent += Environment.NewLine;
+
                 //prologContent += "diagnoza(";
 
                 //int ill = random.Next(0, IllList.Count);
@@ -137,6 +148,69 @@ namespace PrologDBGenerator
             sw.Write(prologContent);
             sw.Flush();
             sw.Close();
+        }
+
+        static Diagnosis GetDiagnosis(int id, DiagnosisEnum mainDiagnosis, DiagnosisOverlapMatrix dom)
+        {
+            var overlapDict = dom.matrix[mainDiagnosis];
+            List<int> degrees = new List<int>();
+
+            for (int i = 0; i < Diagnosis.DiagnosisList.Count; i++)
+            {
+                var diag = Diagnosis.DiagnosisList[i];
+                if (diag != mainDiagnosis)
+                    degrees.Add(overlapDict[diag].GetValue());
+                else
+                    degrees.Add(SeverityOfMainDiagnosis.GetValue());
+            }
+
+            return new Diagnosis(id, degrees);
+        }
+
+        static Symptom GetSymptoms(int id, SymptomDiagnosisMatrix sdm, Diagnosis d)
+        {
+            int rep = random.Next(1,6);
+
+            int totalSum = 0;
+
+            List<Dictionary<SymptomEnum, Value>> ddd = new List<Dictionary<SymptomEnum, Value>>();
+            foreach (var item in d.DiagnosisDegree)
+            {
+                DiagnosisEnum de = item.Key;
+                int repMul = item.Value + 1;
+
+                int degree = item.Value;
+                for (int i = 0; i < repMul*rep; i++)
+                {
+                    ddd.Add(sdm.matrix[de]);
+                    totalSum ++;
+                }
+            }
+
+            Dictionary<SymptomEnum, double> symDegrees = new Dictionary<SymptomEnum, double>();
+            for (int i = 0; i < Symptom.SymList.Count; i++)
+            {
+                symDegrees.Add(Symptom.SymList[i],0);
+            }
+
+            foreach (var item in ddd)
+            {
+                var symDict = item;
+                foreach (var sym in symDict)
+                {
+                    symDegrees[sym.Key] += sym.Value.GetValue();
+                }
+            }
+
+            List<int> degrees = new List<int>();
+
+            for (int i = 0; i < Symptom.SymList.Count; i++)
+            {
+                symDegrees[Symptom.SymList[i]] /= totalSum;
+                degrees.Add((int)Round(symDegrees[Symptom.SymList[i]]));
+            }
+
+            return new Symptom(id, degrees);
         }
     }
 }

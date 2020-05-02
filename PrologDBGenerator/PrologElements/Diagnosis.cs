@@ -9,9 +9,11 @@ namespace PrologDBGenerator.PrologElements
 {
     class Diagnosis
     {
-        public static string DignosisName = "diagnoza";
+        public static string DiagnosisName = "diagnoza";
+        public static string PrologDeclatarion = $":- dynamic {DiagnosisName}/8.";
+        public static string PrologComment = $"%{DiagnosisName}(id,alergia,astma,przeziebienie,angina,grypa,zapalenie oskrzeli, zapalenie pluc)";
 
-        public static List<DiagnosisEnum> IllList = new List<DiagnosisEnum>()
+        public static List<DiagnosisEnum> DiagnosisList = new List<DiagnosisEnum>()
         {
             Alergia,
             Astma,
@@ -38,15 +40,25 @@ namespace PrologDBGenerator.PrologElements
         {
             Id = id;
             DiagnosisDegree = new Dictionary<DiagnosisEnum, int>();
-            for (int i = 0; i < IllList.Count; i++)
+            for (int i = 0; i < DiagnosisList.Count; i++)
             {
-                DiagnosisDegree[IllList[i]] = degrees[i];
+                DiagnosisDegree[DiagnosisList[i]] = degrees[i];
             }
         }
 
         public string GetPrologFact()
         {
-            throw new NotImplementedException();
+            string result = PrologComment + Environment.NewLine + DiagnosisName + $"({Id},";
+
+            for (int i = 0; i < DiagnosisList.Count; i++)
+            {
+                result += $"{diagnosisScale[DiagnosisDegree[DiagnosisList[i]]]}";
+                if (i != DiagnosisList.Count - 1)
+                    result += ",";
+            }
+
+            result += ").";
+            return result;
         }
     }
 }
